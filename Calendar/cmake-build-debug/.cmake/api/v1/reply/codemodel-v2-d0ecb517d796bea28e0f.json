@@ -49,8 +49,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "C:/Users/Scn/CLionProjects/Calendar/cmake-build-debug",
-		"source" : "C:/Users/Scn/CLionProjects/Calendar"
+		"build" : "C:/Users/Scn/Documents/github/Calendar/Calendar/cmake-build-debug",
+		"source" : "C:/Users/Scn/Documents/github/Calendar/Calendar"
 	},
 	"version" : 
 	{

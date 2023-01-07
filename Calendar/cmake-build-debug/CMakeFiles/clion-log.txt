@@ -1,4 +1,4 @@
-C:\Users\Scn\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\222.4345.21\bin\cmake\win\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=C:/Users/Scn/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/222.4345.21/bin/ninja/win/ninja.exe -G Ninja -S C:\Users\Scn\CLionProjects\Calendar -B C:\Users\Scn\CLionProjects\Calendar\cmake-build-debug
+C:\Users\Scn\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\222.4345.21\bin\cmake\win\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - MinGW Makefiles" -S C:\Users\Scn\Documents\github\Calendar\Calendar -B C:\Users\Scn\Documents\github\Calendar\Calendar\cmake-build-debug
 -- The C compiler identification is GNU 11.2.0
 -- The CXX compiler identification is GNU 11.2.0
 -- Detecting C compiler ABI info
@@ -13,4 +13,4 @@ C:\Users\Scn\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\222.4345.21\bin\cma
 -- Detecting CXX compile features - done
 -- Configuring done
 -- Generating done
--- Build files have been written to: C:/Users/Scn/CLionProjects/Calendar/cmake-build-debug
+-- Build files have been written to: C:/Users/Scn/Documents/github/Calendar/Calendar/cmake-build-debug

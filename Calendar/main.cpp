@@ -1,11 +1,12 @@
 #include <iostream>
 #include <ctime>
 #include <vector>
-#include <fstream>
+//#include <fstream>
 
 using namespace std;
 
 string greeting_message = "Welcome! Today is ";
+// to-do: add other messages as a constants
 
 vector<string> menu_options{"Show calendar", "Show schedule", "List events", "Add event", "Remove event", "Set first weekday"};
 
@@ -14,10 +15,20 @@ const int month_start_index = 4;
 const int day_of_month_start_index = 8;
 const int year_start_index = 20;
 
-// functions
+int user_input;
+
+//help functions
 string format_date(char * date_time);
-void print_menu();
+int compare_dates(string date1, string date2);
+bool validate_dates(string start, string end);
+
 void start();
+void print_menu();
+void check_menu_option(int n);
+void invalid_menu_option();
+void close_program();
+
+// menu functions
 void show_calendar(); // to-do
 void show_schedule(); // to-do
 void list_events(); // to-do
@@ -29,7 +40,151 @@ int main()
 {
     start();
 
+    cin >> user_input;
+
+    check_menu_option(user_input);
+
     return 0;
+}
+
+void print_menu()
+{
+    cout << "Choose an option :" << endl;
+
+    for (int i = 0; i < menu_options.size(); i++)
+    {
+        cout << "\t" << i + 1 << ". " << menu_options.at(i) << endl;
+    }
+
+    cout << "Enter your chose :" << endl;
+
+}
+
+void show_calendar()
+{
+    // to-do
+}
+
+void show_schedule()
+{
+    // to-do
+}
+void list_events()
+{
+    // to-do
+}
+
+void add_event()
+{
+    string event_name;
+    string start_date;
+    string end_date;
+
+    cout << "Enter name : ";
+    cin >> event_name;
+    cout << endl << "Enter start date (DD/MM/YYYY) : ";
+    cin >> start_date;
+    cout << endl << "Enter end date (DD/MM/YYYY) : ";
+    cin >> end_date;
+
+    bool is_valid = validate_dates(start_date, end_date);
+    if (is_valid)
+    {
+        //to-do: check if events contains current event name
+        //to-do: write information in file
+    }
+    else
+    {
+        int counter_invalid_inputs = 0;
+        do
+        {
+            if (counter_invalid_inputs > 5)
+            {
+                cout << "You try to input fifth times invalid date!" << endl;
+                close_program();
+            }
+            cout << "Error! end date must be after start date" << endl;
+            cout << "Enter end date (DD/MM/YYYY) : ";
+            cin >> end_date;
+
+            is_valid = validate_dates(start_date, end_date);
+            counter_invalid_inputs++;
+        }
+        while (!is_valid);
+
+    }
+}
+
+void remove_event()
+{
+    // to-do
+}
+
+void set_first_weekday()
+{
+    // to-do
+}
+
+/*
+ * return 1  if date1 is before date2
+ * return -1 if date1 is after date2
+ * return 2  if date1 is equal to date2
+ * return -2 for invalid date format
+ */
+int compare_dates(string date1, string date2)
+{
+    if (date1.size() != date2.size())
+        return -2;
+
+    int c1 = 0;
+    int c2 = 0;
+
+    for (int i = 0; i < date1.size(); i++)
+    {
+        c1 = date1.at(i) - '0';
+        c2 = date2.at(i) - '0';
+
+        // 12/11/2023 or 12.11.2023
+        if ( (c1 == '/' - '0' || c1 == '.' - '0')
+             && (c2 == '/' - '0' || c2 == '.' - '0'))
+            continue;
+
+        if (c1 > c2) return -1;
+        else if (c1 < c2) return 1;
+    }
+
+    return 2;
+}
+
+// check if end date is before start date
+bool validate_dates(string start, string end)
+{
+    int compare = compare_dates(start, end);
+
+    if (compare == -2 || compare == -1)
+        return false;
+
+    return true;
+}
+
+void start()
+{
+    time_t now = time(0);
+    char* date_time = ctime(&now);
+    string time = format_date(date_time);
+
+    cout << greeting_message << time << endl;
+
+    // to-do: You have 1 event tomorrow.
+
+    print_menu();
+}
+
+void close_program()
+{
+    //to-do : save information into files and close files
+
+    exit(-1);
 }
 
 string format_date(char * date_time)
@@ -65,57 +220,28 @@ string format_date(char * date_time)
     return day_of_week + ", " + day + " " + month + " " + year + ".";
 }
 
-void print_menu() // may have enum or vector as a parameter
+void check_menu_option(int n)
 {
-    cout << "Choose an option :" << endl;
-
-    for (int i = 0; i < menu_options.size(); i++)
+    if (n == -1)
     {
-        cout << "\t" << i + 1 << ". " << menu_options.at(i) << endl;
+        close_program();
     }
+    switch (n)
+    {
+        case 1: show_calendar(); break;
+        case 2: show_schedule(); break;
+        case 3: list_events(); break;
+        case 4: add_event(); break;
+        case 5: remove_event(); break;
+        case 6: set_first_weekday(); break;
 
-    cout << "Enter your chose :" << endl;
-
+        default: invalid_menu_option(); break;
+    }
 }
 
-void start()
+void invalid_menu_option()
 {
-    time_t now = time(0);
-    char* date_time = ctime(&now);
-    string time = format_date(date_time);
-
-    cout << greeting_message << time << endl;
-
-    // to-do: You have 1 event tomorrow.
-
-    print_menu();
+    cout << "Your choose was invalid." << endl;
+    cout << "Please enter correct number or -1 to close the program : ";
+    cin >> user_input;
 }
-
-void show_calendar()
-{
-    // to-do
-}
-
-void show_schedule()
-{
-    // to-do
-}
-void list_events()
-{
-    // to-do
-}
-void add_event()
-{
-    // to-do
-}
-
-void remove_event()
-{
-    // to-do
-}
-
-void set_first_weekday()
-{
-    // to-do
-}
-
