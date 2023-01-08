@@ -1,10 +1,10 @@
 #include <iostream>
 #include <ctime>
 #include <vector>
-//#include <fstream>
+#include <fstream>
 
 using namespace std;
-
+const string events_file_name = "events.txt";
 string greeting_message = "Welcome! Today is ";
 // to-do: add other messages as a constants
 
@@ -40,7 +40,10 @@ int main()
 {
     start();
 
-    cin >> user_input;
+    string input;
+    getline(cin, input);
+    user_input = input.at(0) - '0';
+
 
     check_menu_option(user_input);
 
@@ -49,14 +52,14 @@ int main()
 
 void print_menu()
 {
-    cout << "Choose an option :" << endl;
+    cout << "Choose an option : " << endl;
 
     for (int i = 0; i < menu_options.size(); i++)
     {
         cout << "\t" << i + 1 << ". " << menu_options.at(i) << endl;
     }
 
-    cout << "Enter your chose :" << endl;
+    cout << "Enter your chose : " << endl;
 
 }
 
@@ -80,18 +83,32 @@ void add_event()
     string start_date;
     string end_date;
 
-    cout << "Enter name : ";
-    cin >> event_name;
-    cout << endl << "Enter start date (DD/MM/YYYY) : ";
-    cin >> start_date;
-    cout << endl << "Enter end date (DD/MM/YYYY) : ";
-    cin >> end_date;
+    cout << "Enter name : " << endl;
+    getline(cin, event_name, '\n');
+    cout << "Enter start date (DD/MM/YYYY) : " << endl;
+    getline(cin, start_date);
+    cout << "Enter end date (DD/MM/YYYY) : " << endl;
+    getline(cin, end_date);
 
     bool is_valid = validate_dates(start_date, end_date);
     if (is_valid)
     {
         //to-do: check if events contains current event name
-        //to-do: write information in file
+        //to-do: add events multiple times
+        fstream events_file_write;
+
+        events_file_write.open(events_file_name, std::fstream::out | std::fstream::app);
+
+        if (events_file_write.is_open() == false)
+        {
+            std::cerr << "Failed to open file";
+
+            return;
+        }
+
+        events_file_write << start_date << " " << end_date << " " << event_name << "\n";
+
+        events_file_write.close();
     }
     else
     {
