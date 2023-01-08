@@ -1,6 +1,7 @@
 #include <iostream>
 #include <ctime>
 #include <vector>
+#include <algorithm>
 #include <fstream>
 
 using namespace std;
@@ -24,6 +25,8 @@ string format_event(vector<string> event);
 int compare_dates(string date1, string date2);
 bool validate_dates(string start, string end);
 
+void sort_events();
+bool compare_events(const vector<string> & event1, const vector<string> & event2);
 void parse_events();
 string parse_date(int & index, string & buffer);
 string parse_event_name(int & index, string & buffer);
@@ -79,6 +82,8 @@ void show_schedule()
 }
 void list_events() // to-do: sort it
 {
+    sort_events();
+
     cout << "You have the followings events: " << endl;
 
     for (int i = 0; i < events_information.size(); i++)
@@ -287,6 +292,23 @@ void invalid_menu_option()
     cin >> user_input;
 }
 
+bool compare_events(const vector<string> & event1, const vector<string> & event2)
+{
+    int compare_start_dates = compare_dates(event1[0], event2[0]);
+
+    if (compare_start_dates == 2)
+    {
+        int compare_event_names = event1[2].compare(event2[2]);
+        return compare_event_names >= 0; //? of just >
+    }
+
+    return compare_start_dates > 0;
+}
+
+void sort_events()
+{
+    sort(events_information.begin(), events_information.end(), compare_events);
+}
 void parse_events()
 {
     string buffer1, start_date, end_date, event_name;
