@@ -41,8 +41,8 @@ void close_program();
 // menu functions
 void show_calendar(); // to-do
 void show_schedule(); // to-do
-void list_events(); // to-do
-void add_event(); // to-do
+void list_events();
+void add_event();
 void remove_event(); // to-do
 void set_first_weekday(); // to-do
 
@@ -172,11 +172,58 @@ void add_event()
         while (!is_valid);
 
     }
+
+    cout << "Event added successfully!" << endl;
 }
 
 void remove_event()
 {
-    // to-do
+    string event_name;
+    cout << "Enter name : ";
+    getline(cin, event_name);
+
+    // find index of event
+    int index = -1;
+    for (int i = 0; i < events_information.size(); i++)
+    {
+        string current_name = events_information[i][2];
+        bool has_match = (current_name == event_name);
+        if (has_match)
+        {
+            index = i;
+            break;
+        }
+    }
+
+    if (index != -1)
+    {
+        // delete from event_information
+        int size = events_information.size();
+
+        events_information[index] = events_information[size - 1];
+        events_information.pop_back();
+
+        // delete from file
+        fstream file_delete;
+
+        file_delete.open(events_file_name, fstream::out);
+
+        if (file_delete.is_open())
+        {
+            for (int i = 0; i < events_information.size(); i++)
+            {
+                file_delete << events_information[i][0] << " " << events_information[i][1] << " " << events_information[i][2] << "\n";
+            }
+
+            file_delete.close();
+        }
+
+        cout << "Event deleted successfully!" << endl;
+    }
+    else
+    {
+        cout << "There is no such event!" << endl;
+    }
 }
 
 void set_first_weekday()
