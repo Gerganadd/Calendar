@@ -16,11 +16,17 @@ const int day_of_month_start_index = 8;
 const int year_start_index = 20;
 
 int user_input;
+vector<vector <string>> events_information;
 
 //help functions
 string format_date(char * date_time);
+string format_event(vector<string> event);
 int compare_dates(string date1, string date2);
 bool validate_dates(string start, string end);
+
+void parse_events();
+string parse_date(int & index, string & buffer);
+string parse_event_name(int & index, string & buffer);
 
 void start();
 void print_menu();
@@ -43,7 +49,6 @@ int main()
     string input;
     getline(cin, input);
     user_input = input.at(0) - '0';
-
 
     check_menu_option(user_input);
 
@@ -72,9 +77,15 @@ void show_schedule()
 {
     // to-do
 }
-void list_events()
+void list_events() // to-do: sort it
 {
-    // to-do
+    cout << "You have the followings events: " << endl;
+
+    for (int i = 0; i < events_information.size(); i++)
+    {
+        cout << i + 1 << ". ";
+        cout << format_event(events_information[i]) << endl;
+    }
 }
 
 void add_event()
@@ -106,9 +117,14 @@ void add_event()
             return;
         }
 
+        // save information to file
         events_file_write << start_date << " " << end_date << " " << event_name << "\n";
 
         events_file_write.close();
+
+        // add information into events_information
+        vector<string> event = {start_date, end_date, event_name};
+        events_information.push_back(event);
     }
     else
     {
@@ -190,6 +206,14 @@ void start()
     char* date_time = ctime(&now);
     string time = format_date(date_time);
 
+    // parse information of events_file if it exists
+    fstream fileStream;
+    fileStream.open(events_file_name);
+    if (!fileStream.fail())
+    {
+       parse_events();
+    }
+
     cout << greeting_message << time << endl;
 
     // to-do: You have 1 event tomorrow.
@@ -261,4 +285,79 @@ void invalid_menu_option()
     cout << "Your choose was invalid." << endl;
     cout << "Please enter correct number or -1 to close the program : ";
     cin >> user_input;
+}
+
+void parse_events()
+{
+    string buffer1, start_date, end_date, event_name;
+    fstream file_events_reading;
+    file_events_reading.open(events_file_name, fstream::in);
+
+    if (file_events_reading.is_open())
+    {
+        while(getline(file_events_reading, buffer1)) // read line by line
+        {
+            int current_char_index = 0;
+
+            start_date = parse_date(current_char_index, buffer1);
+            end_date = parse_date(++current_char_index, buffer1);
+            event_name = parse_event_name(++current_char_index, buffer1);
+
+            vector<string> event = {start_date, end_date, event_name};
+            events_information.push_back(event);
+        }
+    }
+
+    file_events_reading.close();
+}
+
+string parse_date(int & index, string & buffer)
+{
+    string date;
+
+    while (index < buffer.size() && buffer[index] != ' ')
+    {
+        date += buffer[index++];
+    }
+
+    return date;
+}
+
+string parse_event_name(int & index, string & buffer)
+{
+    string event;
+
+    while (index < buffer.size())
+    {
+        event += buffer[index++];
+    }
+
+    return event;
+}
+
+string format_event(vector<string> event)
+{
+    string result = event[2] + " ("; // event[2] - event_name
+
+    int compare = compare_dates(event[0], event[1]); // event[0] - start date; event[1] - end date
+
+    if (compare == 2) // if start date = end date
+    {
+        result += event[0];
+    }
+    else
+    {
+        result += event[0] + " - " + event[1];
+    }
+
+    result += ")";
+
+    return result;
+}
+
+
+bool contains_event_name(string event_name)
+{
+    // to-do
+    return false;
 }
