@@ -24,6 +24,7 @@ string format_date(char * date_time);
 string format_event(vector<string> event);
 int compare_dates(string date1, string date2);
 bool validate_dates(string start, string end);
+bool contains_event_name(string event_name);
 
 void sort_events();
 bool compare_events(const vector<string> & event1, const vector<string> & event2);
@@ -107,9 +108,10 @@ void add_event()
     getline(cin, end_date);
 
     bool is_valid = validate_dates(start_date, end_date);
-    if (is_valid)
+    bool is_contains_name = contains_event_name(event_name);
+
+    if (is_valid && !is_contains_name)
     {
-        //to-do: check if events contains current event name
         //to-do: add events multiple times
         fstream events_file_write;
 
@@ -130,6 +132,25 @@ void add_event()
         // add information into events_information
         vector<string> event = {start_date, end_date, event_name};
         events_information.push_back(event);
+    }
+    else if (is_contains_name)
+    {
+        int counter_invalid_inputs = 0;
+        do
+        {
+            if (counter_invalid_inputs > 5)
+            {
+                cout << "You try to input fifth times invalid name!" << endl;
+                close_program();
+            }
+            cout << "Error! There is already an event with that name!" << endl;
+            cout << "Enter event name : ";
+            cin >> event_name;
+
+            is_contains_name = contains_event_name(event_name);
+            counter_invalid_inputs++;
+        }
+        while (is_contains_name);
     }
     else
     {
@@ -380,6 +401,11 @@ string format_event(vector<string> event)
 
 bool contains_event_name(string event_name)
 {
-    // to-do
+    for (int i = 0; i < events_information.size(); i++)
+    {
+        if (events_information[i][2].compare(event_name) == 0)
+            return true;
+    }
+
     return false;
 }
