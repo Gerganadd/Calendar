@@ -119,7 +119,6 @@ void show_events_for_month()
         if (!match)
             continue;
 
-        // to-do: fix formula for weekday
         day = get_day(events_information[i][0]);
         month = get_month(events_information[i][0]);
         year = get_year(events_information[i][0]);
@@ -552,29 +551,42 @@ bool contains_event_name(string event_name)
     return false;
 }
 
-string weekday(int day, int month, int year) // to-do: fix formula
+string weekday(int day, int month, int year)
 {
-    int century = year / 100;
-    int n = (day + (13 * (month + 1) / 5) + (year) + (year / 4) - (year / 100) + (year / 400)) % 7;
-    //day + (2.6 * month - 0.2) - (2 * century) + year + (year/4) + (century/4);
-    //n %= 7;
+    int leap_years = (int) year/ 4;
+    long a = (year - leap_years) * 365 + leap_years * 366;
 
+    if(month >= 2) a += 31;
+    if(month >= 3 && (int)year/4 == year/4) a += 29;
+    else if(month >= 3) a += 28;
+    if(month >= 4) a += 31;
+    if(month >= 5) a += 30;
+    if(month >= 6) a += 31;
+    if(month >= 7) a += 30;
+    if(month >= 8) a += 31;
+    if(month >= 9) a += 31;
+    if(month >= 10) a += 30;
+    if(month >= 11) a += 31;
+    if(month == 12) a += 30;
+    a += day;
+
+    int n = (a - 2)  % 7;
     switch(n)
     {
         case 0:
-            return "Sun";
-        case 1:
-            return "Mon";
-        case 2:
-            return "Tue";
-        case 3:
-            return "Wed";
-        case 4:
-            return "Thu";
-        case 5:
-            return "Fri";
-        case 6:
             return "Sat";
+        case 1:
+            return "Sun";
+        case 2:
+            return "Mon";
+        case 3:
+            return "Tue";
+        case 4:
+            return "Wed";
+        case 5:
+            return "Thu";
+        case 6:
+            return "Fri";
     }
 
     return " ";
