@@ -11,13 +11,15 @@ string greeting_message = "Welcome! Today is ";
 
 vector<string> menu_options{"Show calendar", "Show schedule", "List events", "Add event", "Remove event", "Set first weekday"};
 vector<string> months{"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
-//vector<string> day_of_week{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+string day_of_week[] = {"Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
 
+const int days_of_week = 7;
 const int day_of_week_start_index = 0;
 const int month_start_index = 4;
 const int day_of_month_start_index = 8;
 const int year_start_index = 20;
 
+bool is_sunday_format = false;
 int user_input;
 vector<vector <string>> events_information;
 
@@ -29,16 +31,21 @@ int compare_dates(string date1, string date2);
 bool validate_dates(string start, string end);
 bool contains_event_name(string event_name);
 
+int * get_event_for_month(int month, int year);
+int get_month_by_name(char * date_time);
+
 int parse_string_to_integer(string s);
 long pow(int base, int power);
 
 int difference_between(string start_date, string end_date);
+int int_day_of_week(int day, int month, int year);
+string string_day_of_week(int n, int length);
 string weekday(int day, int month, int year);
 bool is_leap_year(int year);
-int day_of_month(int month, int year);
+int days_of_month(int month, int year);
 int get_day(string date);
-int get_month(string date);
-int get_year(string date);
+int get_month(string date, bool is_short_format = false);
+int get_year(string date, bool is_short_format = false);
 
 void sort_events();
 bool compare_events(const vector<string> & event1, const vector<string> & event2);
@@ -54,11 +61,11 @@ void close_program();
 
 // menu functions
 void show_calendar(); // to-do
-void show_events_for_month(); // to-do
+void show_events_for_month();
 void list_events();
 void add_event();
 void remove_event();
-void set_first_weekday(); // to-do
+void set_first_weekday();
 
 int main()
 {
@@ -87,6 +94,93 @@ void print_menu()
 
 void show_calendar()
 {
+    cout << "Enter month (MM/YYYY) : " << endl;
+    string input;
+    getline(cin, input);
+
+    cout << format_month_and_year(input) << endl;
+
+    int month = get_month(input, true);
+    int year = get_year(input, true);
+
+    int days = days_of_month(month, year);
+    int first_day_of_week = int_day_of_week(1, month, year);
+    string str_first_day_of_week = weekday(1, month, year);
+
+    int * events_array = get_event_for_month(month, year);
+
+    time_t now = time(0);
+    char* date_time = ctime(&now);
+
+    string string_today = {date_time[day_of_month_start_index], date_time[day_of_month_start_index + 1]};
+    string string_this_year = {date_time[year_start_index], date_time[year_start_index + 1], date_time[year_start_index + 2], date_time[year_start_index + 3]};
+
+    int this_year = parse_string_to_integer(string_this_year);
+    int this_month =  get_month_by_name(date_time);
+    int today = parse_string_to_integer(string_today);
+    int today_day_of_week = int_day_of_week(today, this_month, this_year);
+
+    bool is_today_month = (month == this_month) && (year == this_year); // to-do change name
+
+    string spaces = "    ";
+
+    for (int i = 0; i < days_of_week; i++)
+    {
+        cout << "__________";
+    }
+    cout << endl;
+
+    // print labels of days of the week
+    for (int i = 0; i < days_of_week; i++)
+    {
+        if (i == today_day_of_week && is_today_month)
+        {
+            cout << "   [" << string_day_of_week(i, 2) << "]   ";
+        }
+        else
+        {
+            cout << spaces << string_day_of_week(i, 2) << spaces;
+        }
+    }
+    cout << endl;
+
+    string empty_day = spaces + "**" + spaces;
+
+    // print empty days
+    for (int i = 0; i < first_day_of_week; i++)
+    {
+        cout << empty_day;
+    }
+
+    // print days
+    for (int i = 1; i <= days; i++)
+    {
+        if ((i + first_day_of_week) % 7 == 1)
+        {
+            cout << endl;
+        }
+
+        int count_events = events_array[i];
+
+        if (i == today && is_today_month)
+        {
+            cout << "   [" << today << "]   ";
+        }
+        else
+        {
+            cout << spaces << ((i < 10) ? " " : "") << i;
+        }
+
+        if (count_events > 0)
+        {
+            cout << "(" << count_events << ")" << ((count_events < 10) ? " " : "");
+        }
+        else if (!is_today_month || i != today)
+        {
+            cout << spaces;
+        }
+
+    }
 }
 
 void show_events_for_month()
@@ -103,7 +197,7 @@ void show_events_for_month()
 
     int current_month = get_month(input);
     int current_year = get_year(input);
-    int month_total_days = day_of_month(current_month, current_year);
+    int month_total_days = days_of_month(current_month, current_year);
 
     int day = 0;
     int month = 0;
@@ -322,7 +416,7 @@ void remove_event()
 
 void set_first_weekday()
 {
-    // to-do
+    //to-do
 }
 
 /*
@@ -551,6 +645,38 @@ bool contains_event_name(string event_name)
     return false;
 }
 
+string string_day_of_week(int n, int length = 3)
+{
+    if (n > days_of_week - 1)
+    {
+        return " ";
+    }
+
+    return day_of_week[n].substr(0,length);
+}
+
+int int_day_of_week(int day, int month, int year)
+{
+    int leap_years = (int) year/ 4;
+    long a = (year - leap_years) * 365 + leap_years * 366;
+
+    if(month >= 2) a += 31;
+    if(month >= 3 && (int)year/4 == year/4) a += 29;
+    else if(month >= 3) a += 28;
+    if(month >= 4) a += 31;
+    if(month >= 5) a += 30;
+    if(month >= 6) a += 31;
+    if(month >= 7) a += 30;
+    if(month >= 8) a += 31;
+    if(month >= 9) a += 31;
+    if(month >= 10) a += 30;
+    if(month >= 11) a += 31;
+    if(month == 12) a += 30;
+    a += day;
+
+    return (a - 2)  % 7;
+}
+
 string weekday(int day, int month, int year)
 {
     int leap_years = (int) year/ 4;
@@ -658,7 +784,7 @@ bool is_leap_year(int year)
     return is_leap_year;
 }
 
-int day_of_month(int month, int year)
+int days_of_month(int month, int year)
 {
     bool leap_year = is_leap_year(year); //false = 0; true = 1;
 
@@ -680,7 +806,7 @@ int day_of_month(int month, int year)
 //day2 and month2 - end date
 int days_between_dates_in_same_year(int day1, int month1, int day2, int month2, int year)
 {
-    int diff_days_in_current_month = day_of_month(month1, year) - day1;
+    int diff_days_in_current_month = days_of_month(month1, year) - day1;
     int diff_months = month2 - month1;
     int sum_days = 0;
 
@@ -688,7 +814,7 @@ int days_between_dates_in_same_year(int day1, int month1, int day2, int month2, 
     {
         for (int i = 1; i < diff_months; i++)
         {
-            sum_days += day_of_month(month2 - i, year);
+            sum_days += days_of_month(month2 - i, year);
         }
     }
 
@@ -739,12 +865,75 @@ int get_day(string date)
     return parse_string_to_integer(date.substr(0, 2));
 }
 
-int get_month(string date)
+// full_format = "dd/mm/yyyy";
+// short_format = "mm/yyyy";
+int get_month(string date, bool is_short_format)
 {
+    if (is_short_format)
+    {
+        return parse_string_to_integer(date.substr(0, 2));
+    }
+
     return parse_string_to_integer(date.substr(3, 2));
 }
 
-int get_year(string date)
+int get_year(string date, bool is_short_format)
 {
+    if (is_short_format)
+    {
+        return parse_string_to_integer(date.substr(3, 4));
+    }
+
     return parse_string_to_integer(date.substr(6, 4));
+}
+
+int * get_event_for_month(int month, int year)
+{
+    int month_total_days = days_of_month(month, year);
+    int * events_count_array = new int[month_total_days + 1]{};
+
+    int days_difference = 0;
+    int current_day = 0;
+    int current_month = 0;
+    int current_year = 0;
+
+    for (int i = 0; i < events_information.size(); i++)
+    {
+        current_day = get_day(events_information[i][0]);
+        current_month = get_month(events_information[i][0]);
+        current_year = get_year(events_information[i][0]);
+
+        bool match = (month == current_month) && (year == current_year);
+
+        if (!match)
+            continue;
+
+        int diff = get_day(events_information[i][1]) - current_day;
+        for (int k = 1; k <= diff; k++)
+        {
+            events_count_array[current_day + k]++;
+        }
+
+        events_count_array[current_day]++;
+    }
+
+    return events_count_array;
+}
+
+int get_month_by_name(char * date_time)
+{
+    if (date_time[month_start_index] == 'J') return 1;
+    else if (date_time[month_start_index] == 'F') return 2;
+    else if (date_time[month_start_index] == 'M' && date_time[month_start_index + 2] == 'r') return 3;
+    else if (date_time[month_start_index] == 'A' && date_time[month_start_index + 2] == 'r') return 4;
+    else if (date_time[month_start_index] == 'M' && date_time[month_start_index + 2] == 'y') return 5;
+    else if (date_time[month_start_index] == 'J' && date_time[month_start_index + 2] == 'n') return 6;
+    else if (date_time[month_start_index] == 'J' && date_time[month_start_index + 2] == 'l') return 7;
+    else if (date_time[month_start_index] == 'A' && date_time[month_start_index + 2] == 'g') return 8;
+    else if (date_time[month_start_index] == 'S') return 9;
+    else if (date_time[month_start_index] == 'O') return 10;
+    else if (date_time[month_start_index] == 'N') return 11;
+    else if (date_time[month_start_index] == 'D') return 12;
+
+    return -1;
 }
