@@ -6,6 +6,7 @@
 
 using namespace std;
 const string events_file_name = "events.txt";
+const string settings_file_name = "settings.txt";
 string greeting_message = "Welcome! Today is ";
 // to-do: add other messages as a constants
 
@@ -69,7 +70,7 @@ void set_first_weekday();
 
 int main()
 {
-    start();
+    start(); 
 
     string input;
     getline(cin, input);
@@ -416,7 +417,45 @@ void remove_event()
 
 void set_first_weekday()
 {
-    //to-do
+    cout << "The first day of the week is currently ";
+
+    cout << endl << "day : " << is_sunday_format << endl;
+
+    if (is_sunday_format) cout << "Sunday" << endl;
+    else cout << "Monday" << endl;
+
+    cout << "Enter new (0 - for Monday/ 1 - for Sunday) : " << endl;
+
+    string input;
+    getline(cin, input);
+
+    int counter = 0;
+    while (input != "0" && input != "1")
+    {
+        if (counter == 5)
+        {
+            cout << "You try to input fifth times invalid data!" << endl;
+
+            close_program();
+        }
+        cout << "Invalid input! Enter 0 or 1 (0 - for Monday/ 1 - for Sunday) : " << endl;
+
+        getline(cin, input);
+
+        counter++;
+    }
+
+    is_sunday_format = parse_string_to_integer(input);
+
+    fstream file_write;
+    file_write.open(settings_file_name, fstream::out);
+    if (file_write.is_open())
+    {
+        file_write << is_sunday_format;
+    }
+    file_write.close();
+
+    cout << "Saved!" << endl;
 }
 
 /*
@@ -474,6 +513,19 @@ void start()
     {
        parse_events();
     }
+    fileStream.close();
+
+    // parse information from settings_file if it exists
+    string text;
+    fstream file_read;
+    file_read.open(settings_file_name, fstream::in);
+    if (file_read.is_open())
+    {
+        getline(file_read, text);
+    }
+    file_read.close();
+
+    is_sunday_format = parse_string_to_integer(text);
 
     cout << greeting_message << time << endl;
 
@@ -484,8 +536,6 @@ void start()
 
 void close_program()
 {
-    //to-do : save information into files and close files
-
     exit(-1);
 }
 
