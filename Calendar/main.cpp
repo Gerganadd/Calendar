@@ -5,225 +5,210 @@
 #include <fstream>
 
 using namespace std;
+
 const string events_file_name = "events.txt";
 const string settings_file_name = "settings.txt";
-string greeting_message = "Welcome! Today is ";
-// to-do: add other messages as a constants
+
+const string short_format = "MM/YYYY";
+const string full_format = "DD/MM/YYYY";
+
+const string greeting_message = "Welcome! Today is ";
+const string tomorrow_events_message = "Yours events tomorrow : ";
+const string choose_menu_option_text1 = "Choose an option : ";
+const string choose_menu_option_text2 = "Enter your chose : ";
+const string enter_short_date_short_format = "Enter month (MM/YYYY) : ";
+const string events_message = "You have the followings events: ";
+const string event_name_message = "Enter name : ";
+const string add_event_start_date_message = "Enter start date (DD/MM/YYYY) : ";
+const string add_event_end_date_message = "Enter end date (DD/MM/YYYY) : ";
+const string problem_end_date_message = "Error! end date must be after start date";
+const string problem_event_name_message = "Error! There is already an event with that name!";
+const string problem_open_file = "Failed to open file";
+const string problem_delete_event = "There is no such event!";
+const string add_successfully_message = "Event added successfully!";
+const string delete_successfully_message = "Event deleted successfully!";
+const string save_successfully_message = "Saved!";
+const string change_first_weekday_message1 = "The first day of the week is currently ";
+const string enter_first_week_message = "Enter new (0 - for Monday/ 1 - for Sunday) : ";
 
 vector<string> menu_options{"Show calendar", "Show schedule", "List events", "Add event", "Remove event", "Set first weekday"};
 vector<string> months{"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
-string day_of_week[] = {"Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
+string array_days_of_week[] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
 const int days_of_week = 7;
-const int day_of_week_start_index = 0;
 const int month_start_index = 4;
 const int day_of_month_start_index = 8;
 const int year_start_index = 20;
 
-bool is_sunday_format = false;
-int user_input;
-vector<vector <string>> events_information;
-
 //help functions
-string format_month_and_year(string input);
-string format_date(char * date_time);
-string format_event(vector<string> event);
-int compare_dates(string date1, string date2);
-bool validate_dates(string start, string end);
-bool contains_event_name(string event_name);
-
-int * get_event_for_month(int month, int year);
-int get_month_by_name(char * date_time);
-
-int parse_string_to_integer(string s);
-long pow(int base, int power);
-
-int difference_between(string start_date, string end_date);
-int int_day_of_week(int day, int month, int year);
-string string_day_of_week(int n, int length);
-string weekday(int day, int month, int year);
-bool is_leap_year(int year);
-int days_of_month(int month, int year);
-int get_day(string date);
-int get_month(string date, bool is_short_format = false);
-int get_year(string date, bool is_short_format = false);
-
-void sort_events();
-bool compare_events(const vector<string> & event1, const vector<string> & event2);
-void parse_events();
-string parse_date(int & index, string & buffer);
-string parse_event_name(int & index, string & buffer);
-
-void start();
+void start(vector<vector<string>> & all_events, vector<vector<string>> & current_month_events, vector<vector<string>> & events_today);
+void sort_events(vector<vector<string>> & events);
 void print_menu();
-void check_menu_option(int n);
-void invalid_menu_option();
+void check_menu_option(int n, bool is_sunday_format, vector<vector<string>> & all_events);
 void close_program();
 
+string parse_date(int & index, string & buffer);
+string parse_event_name(int & index, string & buffer);
+vector<vector<string>> parse_events();
+bool parse_first_day_of_week();
+unsigned int parse_string_to_integer(string s);
+
+string format_today_date();
+string format_month_and_year(string & input);
+string format_event(vector<string> event);
+
+int compare_dates(string & date1, string & date2);
+bool validate_dates(string & start, string & end);
+
+bool compare_events(const vector<string> & event1, const vector<string> & event2);
+bool contains_event_name(string & event_name, vector<vector<string>> & events);
+vector<vector<string>> events_for_month(unsigned int month, unsigned int year, vector<vector<string>> & all_events);
+vector<vector<string>> events_for_day(unsigned int day, unsigned int month, unsigned int year, vector<vector<string>> & all_events);
+int * convert_events_of_month_into_array(unsigned int month, unsigned int year, vector<vector<string>> month_events);
+void print_events(vector<vector<string>> & events);
+
+bool is_leap_year(unsigned int year);
+long pow(int base, int power);
+
+unsigned int difference_between(string & start_date, string & end_date);
+int get_month_by_name(char * date_time);
+int int_day_of_week(unsigned int day, unsigned int month, unsigned int year);
+string string_day_of_week(int n, int length);
+
+unsigned int days_of_month(unsigned int month, unsigned int year);
+unsigned int get_month(string & date, bool is_short_format = false);
+unsigned int get_year(string & date, bool is_short_format = false);
+unsigned int get_day(string & date);
+unsigned int get_today();
+unsigned int get_current_month();
+unsigned int get_current_year();
+unsigned int get_tomorrow();
+unsigned int get_tomorrow_month();
+unsigned int get_tomorrow_year();
+string get_event_start_date(vector<string> event);
+string get_event_end_date(vector<string> event);
+string get_event_name(vector<string> event);
+
+void print_calendar(bool is_sunday_format, string input, int * events_array, int days, int first_day_of_week,
+                    int today, int today_day_of_week, bool is_current_month_calendar);
+
 // menu functions
-void show_calendar(); // to-do
-void show_events_for_month();
-void list_events();
-void add_event();
-void remove_event();
-void set_first_weekday();
+void show_calendar(bool is_sunday_format, vector<vector<string>> all_events);
+void show_events_for_month(vector<vector<string>> & all_events);
+void list_events(vector<vector<string>> & all_events);
+void add_event(vector<vector<string>> & all_events);
+void remove_event(vector<vector<string>> & all_events);
+void set_first_weekday(bool is_sunday_format);
 
 int main()
 {
-    start(); 
+    string time = format_today_date();
+    cout << greeting_message << time << endl;
+
+    vector<vector<string>> all_events = parse_events();
+
+    bool is_sunday_format = parse_first_day_of_week();
+
+    vector<vector<string>> current_month_events = events_for_month(get_current_month(), get_current_year(), all_events);
+    vector<vector<string>> events_today = events_for_day(get_today(), get_current_month(), get_current_year(), current_month_events);
+
+    start(all_events, current_month_events, events_today);
+
+    print_menu();
 
     string input;
     getline(cin, input);
-    user_input = input.at(0) - '0';
+    int selected_option = parse_string_to_integer(input);
 
-    check_menu_option(user_input);
+    check_menu_option(selected_option, is_sunday_format, all_events);
+
     return 0;
 }
 
 void print_menu()
 {
-    cout << "Choose an option : " << endl;
+    cout << choose_menu_option_text1 << endl;
 
     for (int i = 0; i < menu_options.size(); i++)
     {
         cout << "\t" << i + 1 << ". " << menu_options.at(i) << endl;
     }
 
-    cout << "Enter your chose : " << endl;
-
+    cout << choose_menu_option_text2 << endl;
 }
 
-void show_calendar()
+void show_calendar(bool is_sunday_format, vector<vector<string>> all_events)
 {
-    cout << "Enter month (MM/YYYY) : " << endl;
+    // gets today's date
+    unsigned int today = get_today();
+    unsigned int current_month = get_current_month();
+    unsigned int current_year = get_current_year();
+
+    int today_day_of_week = int_day_of_week(today, current_month, current_year);
+
+    // input month and year
+    cout << enter_short_date_short_format << endl;
     string input;
     getline(cin, input);
 
-    cout << format_month_and_year(input) << endl;
-
-    int month = get_month(input, true);
-    int year = get_year(input, true);
-
-    int days = days_of_month(month, year);
+    unsigned int month = get_month(input, true);
+    unsigned int year = get_year(input, true);
+    unsigned int days = days_of_month(month, year);
     int first_day_of_week = int_day_of_week(1, month, year);
-    string str_first_day_of_week = weekday(1, month, year);
 
-    int * events_array = get_event_for_month(month, year);
+    bool is_current_month = (month == current_month) && (year == current_year);
 
-    time_t now = time(0);
-    char* date_time = ctime(&now);
+    vector<vector<string>> current_month_events = events_for_month(month, year, all_events);
 
-    string string_today = {date_time[day_of_month_start_index], date_time[day_of_month_start_index + 1]};
-    string string_this_year = {date_time[year_start_index], date_time[year_start_index + 1], date_time[year_start_index + 2], date_time[year_start_index + 3]};
+    unsigned int events_array_size = days_of_month(month, year) + 1;
+    int * events_array = convert_events_of_month_into_array(month, year, current_month_events);
 
-    int this_year = parse_string_to_integer(string_this_year);
-    int this_month =  get_month_by_name(date_time);
-    int today = parse_string_to_integer(string_today);
-    int today_day_of_week = int_day_of_week(today, this_month, this_year);
-
-    bool is_today_month = (month == this_month) && (year == this_year); // to-do change name
-
-    string spaces = "    ";
-
-    for (int i = 0; i < days_of_week; i++)
-    {
-        cout << "__________";
-    }
-    cout << endl;
-
-    // print labels of days of the week
-    for (int i = 0; i < days_of_week; i++)
-    {
-        if (i == today_day_of_week && is_today_month)
-        {
-            cout << "   [" << string_day_of_week(i, 2) << "]   ";
-        }
-        else
-        {
-            cout << spaces << string_day_of_week(i, 2) << spaces;
-        }
-    }
-    cout << endl;
-
-    string empty_day = spaces + "**" + spaces;
-
-    // print empty days
-    for (int i = 0; i < first_day_of_week; i++)
-    {
-        cout << empty_day;
-    }
-
-    // print days
-    for (int i = 1; i <= days; i++)
-    {
-        if ((i + first_day_of_week) % 7 == 1)
-        {
-            cout << endl;
-        }
-
-        int count_events = events_array[i];
-
-        if (i == today && is_today_month)
-        {
-            cout << "   [" << today << "]   ";
-        }
-        else
-        {
-            cout << spaces << ((i < 10) ? " " : "") << i;
-        }
-
-        if (count_events > 0)
-        {
-            cout << "(" << count_events << ")" << ((count_events < 10) ? " " : "");
-        }
-        else if (!is_today_month || i != today)
-        {
-            cout << spaces;
-        }
-
-    }
+    print_calendar(is_sunday_format, input, events_array, days, first_day_of_week, today, today_day_of_week, is_current_month);
 }
 
-void show_events_for_month()
+void show_events_for_month(vector<vector<string>> & all_events)
 {
-    cout << "Enter month (MM/YYYY) : " << endl;
+    // input month and year
+    cout << enter_short_date_short_format << endl;
     string input;
     getline(cin, input);
 
+    unsigned int current_month = get_month(input, true);
+    unsigned int current_year = get_year(input, true);
+    unsigned int month_total_days = days_of_month(current_month, current_year);
+
+    unsigned int day = 0;
+    unsigned int month = 0;
+    unsigned int year = 0;
+    unsigned int days_difference = 0;
+
+    // print name of month and year
     string month_year = format_month_and_year(input);
     cout << month_year << endl;
     cout << string(month_year.size(), '-') << endl;
 
-    sort_events();
+    vector<vector<string>> month_events = events_for_month(current_month, current_year, all_events);
 
-    int current_month = get_month(input);
-    int current_year = get_year(input);
-    int month_total_days = days_of_month(current_month, current_year);
+    sort_events(month_events);
 
-    int day = 0;
-    int month = 0;
-    int year = 0;
-    int days_difference = 0;
-
-    vector<string> * event_names_array = new vector<string>[month_total_days]{};
+    int array_size = month_total_days + 1;
+    vector<string> * event_names_array = new vector<string>[array_size]{};
 
     // save information in event_names_array
-    for (int i = 0; i < events_information.size(); i++)
+    for (int i = 0; i < month_events.size(); i++)
     {
-        bool match = events_information[i][0].substr(3, events_information[i][0].size() - 1) == input;
-        if (!match)
-            continue;
+        string event_start_date = get_event_start_date(month_events[i]);
+        string event_end_date = get_event_end_date(month_events[i]);
+        string info = get_event_name(month_events[i]);
 
-        day = get_day(events_information[i][0]);
-        month = get_month(events_information[i][0]);
-        year = get_year(events_information[i][0]);
-
-        string info = events_information[i][2];
+        day = get_day(event_start_date);
+        month = get_month(event_start_date);
+        year = get_year(event_start_date);
 
         // when start and end date are different
-        if (compare_dates(events_information[i][0], events_information[i][1]) != 2)
+        if (compare_dates(event_start_date, event_end_date) != 2)
         {
-            days_difference = difference_between(events_information[i][0], events_information[i][1]);
+            days_difference = difference_between(event_start_date, event_end_date);
 
             for (int k = 0; k < days_difference; k++)
             {
@@ -238,19 +223,20 @@ void show_events_for_month()
         }
         else
         {
-            event_names_array[day + i].push_back(info);
+            event_names_array[day].push_back(info);
         }
     }
 
-    // print
-    for (int i = 0; i < month_total_days; i++)
+    // print events
+    for (int i = 0; i < array_size; i++)
     {
         if (event_names_array[i].empty())
             continue;
 
-        string day_of_week = weekday(i, month, year);
+        int d = int_day_of_week(i, month, year);
+        string day_of_week = string_day_of_week(d, 2);
 
-        cout << day_of_week << ", " << i << string(3, ' ');
+        cout << day_of_week << ", " << i << ((i < 10) ? " " : "") << string(3, ' ');
 
         for (int k = 0; k < event_names_array[i].size(); k++)
         {
@@ -260,7 +246,7 @@ void show_events_for_month()
     }
 
     // delete event_name_array
-    for (int i = 0; i < month_total_days; i++)
+    for (int i = 0; i < array_size; i++)
     {
         if (!event_names_array[i].empty())
         {
@@ -270,112 +256,75 @@ void show_events_for_month()
     delete[] event_names_array;
 }
 
-void list_events()
+void list_events(vector<vector<string>> & all_events)
 {
-    sort_events();
+    sort_events(all_events);
 
-    cout << "You have the followings events: " << endl;
+    cout << events_message << endl;
 
-    for (int i = 0; i < events_information.size(); i++)
+    for (int i = 0; i < all_events.size(); i++)
     {
         cout << i + 1 << ". ";
-        cout << format_event(events_information[i]) << endl;
+        cout << format_event(all_events[i]) << endl;
     }
 }
 
-void add_event()
+void add_event(vector<vector<string>> & all_events)
 {
     string event_name;
     string start_date;
     string end_date;
 
-    cout << "Enter name : " << endl;
+    cout << event_name_message << endl;
     getline(cin, event_name, '\n');
-    cout << "Enter start date (DD/MM/YYYY) : " << endl;
+    cout << add_event_start_date_message << endl;
     getline(cin, start_date);
-    cout << "Enter end date (DD/MM/YYYY) : " << endl;
+    cout << add_event_end_date_message << endl;
     getline(cin, end_date);
 
     bool is_valid = validate_dates(start_date, end_date);
-    bool is_contains_name = contains_event_name(event_name);
+    bool is_contains_name = contains_event_name(event_name, all_events);
 
     if (is_valid && !is_contains_name)
     {
-        //to-do: add events multiple times
         fstream events_file_write;
-
         events_file_write.open(events_file_name, std::fstream::out | std::fstream::app);
-
-        if (events_file_write.is_open() == false)
+        if (!events_file_write.is_open())
         {
-            std::cerr << "Failed to open file";
+            std::cerr << problem_open_file;
 
             return;
         }
 
         // save information to file
         events_file_write << start_date << " " << end_date << " " << event_name << "\n";
-
         events_file_write.close();
 
-        // add information into events_information
-        vector<string> event = {start_date, end_date, event_name};
-        events_information.push_back(event);
+        cout << add_successfully_message << endl;
     }
     else if (is_contains_name)
     {
-        int counter_invalid_inputs = 0;
-        do
-        {
-            if (counter_invalid_inputs > 5)
-            {
-                cout << "You try to input fifth times invalid name!" << endl;
-                close_program();
-            }
-            cout << "Error! There is already an event with that name!" << endl;
-            cout << "Enter event name : ";
-            cin >> event_name;
-
-            is_contains_name = contains_event_name(event_name);
-            counter_invalid_inputs++;
-        }
-        while (is_contains_name);
+        cout << problem_event_name_message << endl;
+        close_program();
     }
     else
     {
-        int counter_invalid_inputs = 0;
-        do
-        {
-            if (counter_invalid_inputs > 5)
-            {
-                cout << "You try to input fifth times invalid date!" << endl;
-                close_program();
-            }
-            cout << "Error! end date must be after start date" << endl;
-            cout << "Enter end date (DD/MM/YYYY) : ";
-            cin >> end_date;
-
-            is_valid = validate_dates(start_date, end_date);
-            counter_invalid_inputs++;
-        }
-        while (!is_valid);
-
+        cout << problem_end_date_message << endl;
+        close_program();
     }
-
-    cout << "Event added successfully!" << endl;
 }
 
-void remove_event()
+void remove_event(vector<vector<string>> & all_events)
 {
     string event_name;
-    cout << "Enter name : ";
+    cout << event_name_message;
     getline(cin, event_name);
 
     // find index of event
     int index = -1;
-    for (int i = 0; i < events_information.size(); i++)
+    for (int i = 0; i < all_events.size(); i++)
     {
-        string current_name = events_information[i][2];
+        string current_name = get_event_name(all_events[i]);
         bool has_match = (current_name == event_name);
         if (has_match)
         {
@@ -384,13 +333,17 @@ void remove_event()
         }
     }
 
+    string current_start_date;
+    string current_end_date;
+    string current_name;
+
     if (index != -1)
     {
-        // delete from event_information
-        int size = events_information.size();
+        // delete from events
+        int size = all_events.size();
 
-        events_information[index] = events_information[size - 1];
-        events_information.pop_back();
+        all_events[index] = all_events[size - 1];
+        all_events.pop_back();
 
         // delete from file
         fstream file_delete;
@@ -399,52 +352,34 @@ void remove_event()
 
         if (file_delete.is_open())
         {
-            for (int i = 0; i < events_information.size(); i++)
+            for (int i = 0; i < all_events.size(); i++)
             {
-                file_delete << events_information[i][0] << " " << events_information[i][1] << " " << events_information[i][2] << "\n";
+                current_start_date = get_event_start_date(all_events[i]);
+                current_end_date = get_event_end_date(all_events[i]);
+                current_name = get_event_name(all_events[i]);
+                file_delete << current_start_date << " " << current_end_date << " " << current_name << "\n";
             }
 
             file_delete.close();
         }
 
-        cout << "Event deleted successfully!" << endl;
+        cout << delete_successfully_message << endl;
     }
     else
     {
-        cout << "There is no such event!" << endl;
+        cout << problem_delete_event << endl;
     }
 }
 
-void set_first_weekday()
+void set_first_weekday(bool is_sunday_format)
 {
-    cout << "The first day of the week is currently ";
-
-    cout << endl << "day : " << is_sunday_format << endl;
-
-    if (is_sunday_format) cout << "Sunday" << endl;
-    else cout << "Monday" << endl;
-
-    cout << "Enter new (0 - for Monday/ 1 - for Sunday) : " << endl;
+    cout << change_first_weekday_message1 << (is_sunday_format ? "Sunday" : "Monday") << endl;
+    cout << enter_first_week_message << endl;
 
     string input;
     getline(cin, input);
 
-    int counter = 0;
-    while (input != "0" && input != "1")
-    {
-        if (counter == 5)
-        {
-            cout << "You try to input fifth times invalid data!" << endl;
-
-            close_program();
-        }
-        cout << "Invalid input! Enter 0 or 1 (0 - for Monday/ 1 - for Sunday) : " << endl;
-
-        getline(cin, input);
-
-        counter++;
-    }
-
+    // save in file
     is_sunday_format = parse_string_to_integer(input);
 
     fstream file_write;
@@ -455,7 +390,7 @@ void set_first_weekday()
     }
     file_write.close();
 
-    cout << "Saved!" << endl;
+    cout << save_successfully_message << endl;
 }
 
 /*
@@ -464,33 +399,55 @@ void set_first_weekday()
  * return 2  if date1 is equal to date2
  * return -2 for invalid date format
  */
-int compare_dates(string date1, string date2)
+int compare_dates(string & date1, string & date2)
 {
     if (date1.size() != date2.size())
         return -2;
 
-    int c1 = 0;
-    int c2 = 0;
-
-    for (int i = 0; i < date1.size(); i++)
+    if (date1.size() == short_format.size())
     {
-        c1 = date1.at(i) - '0';
-        c2 = date2.at(i) - '0';
+        unsigned int year1 = get_year(date1, true);
+        unsigned int year2 = get_year(date2, true);
 
-        // 12/11/2023 or 12.11.2023
-        if ( (c1 == '/' - '0' || c1 == '.' - '0')
-             && (c2 == '/' - '0' || c2 == '.' - '0'))
-            continue;
+        if (year1 < year2) return 1;
+        else if (year1 > year2) return -1;
 
-        if (c1 > c2) return -1;
-        else if (c1 < c2) return 1;
+        unsigned int month1 = get_month(date1, true);
+        unsigned int month2 = get_month(date2, true);
+
+        if (month1 < month2) return 1;
+        else if (month1 > month2) return -1;
+    }
+    else if (date1.size() == full_format.size())
+    {
+        unsigned int year1 = get_year(date1, false);
+        unsigned int year2 = get_year(date2, false);
+
+        if (year1 < year2) return 1;
+        else if (year1 > year2) return -1;
+
+        unsigned int month1 = get_month(date1, false);
+        unsigned int month2 = get_month(date2, false);
+
+        if (month1 < month2) return 1;
+        else if (month1 > month2) return -1;
+
+        unsigned int day1 = get_day(date1);
+        unsigned int day2 = get_day(date2);
+
+        if (day1 < day2) return 1;
+        else if (day1 > day2) return -1;
+    }
+    else
+    {
+        return -2;
     }
 
     return 2;
 }
 
 // check if end date is before start date
-bool validate_dates(string start, string end)
+bool validate_dates(string & start, string & end)
 {
     int compare = compare_dates(start, end);
 
@@ -500,107 +457,45 @@ bool validate_dates(string start, string end)
     return true;
 }
 
-void start()
-{
-    time_t now = time(0);
-    char* date_time = ctime(&now);
-    string time = format_date(date_time);
-
-    // parse information of events_file if it exists
-    fstream fileStream;
-    fileStream.open(events_file_name);
-    if (!fileStream.fail())
-    {
-       parse_events();
-    }
-    fileStream.close();
-
-    // parse information from settings_file if it exists
-    string text;
-    fstream file_read;
-    file_read.open(settings_file_name, fstream::in);
-    if (file_read.is_open())
-    {
-        getline(file_read, text);
-    }
-    file_read.close();
-
-    is_sunday_format = parse_string_to_integer(text);
-
-    cout << greeting_message << time << endl;
-
-    // to-do: You have 1 event tomorrow.
-
-    print_menu();
-}
-
 void close_program()
 {
     exit(-1);
 }
 
-string format_date(char * date_time)
+string format_today_date()
 {
-    string year = {date_time[year_start_index], date_time[year_start_index + 1], date_time[year_start_index + 2], date_time[year_start_index + 3]};
-    string day = {date_time[day_of_month_start_index], date_time[day_of_month_start_index + 1]};
-    string day_of_week = "";
-    string month = "";
+    unsigned int year = get_current_year();
+    unsigned int month = get_current_month();
+    unsigned int day = get_today();
+    int s = int_day_of_week(day, month, year);
 
-    // for day of week
-    if (date_time[day_of_week_start_index] == 'M') day_of_week = "Monday";
-    else if(date_time[day_of_week_start_index] == 'T' && date_time[day_of_week_start_index + 1] == 'u') day_of_week = "Tuesday";
-    else if(date_time[day_of_week_start_index] == 'W') day_of_week = "Wednesday";
-    else if(date_time[day_of_week_start_index] == 'T' && date_time[day_of_week_start_index + 1] == 'h') day_of_week = "Thursday";
-    else if(date_time[day_of_week_start_index] == 'F') day_of_week = "Friday";
-    else if(date_time[day_of_week_start_index] == 'S' && date_time[day_of_week_start_index + 1] == 'a') day_of_week = "Saturday";
-    else if(date_time[day_of_week_start_index] == 'S' && date_time[day_of_week_start_index + 1] == 'u') day_of_week = "Sunday";
+    string day_of_week = array_days_of_week[s];
+    string m = months[month - 1];
 
-    // for month
-    if (date_time[month_start_index] == 'J') month = "January";
-    else if (date_time[month_start_index] == 'F') month = "February";
-    else if (date_time[month_start_index] == 'M' && date_time[month_start_index + 2] == 'r') month = "March";
-    else if (date_time[month_start_index] == 'A' && date_time[month_start_index + 2] == 'r') month = "April";
-    else if (date_time[month_start_index] == 'M' && date_time[month_start_index + 2] == 'y') month = "May";
-    else if (date_time[month_start_index] == 'J' && date_time[month_start_index + 2] == 'n') month = "June";
-    else if (date_time[month_start_index] == 'J' && date_time[month_start_index + 2] == 'l') month = "July";
-    else if (date_time[month_start_index] == 'A' && date_time[month_start_index + 2] == 'g') month = "August";
-    else if (date_time[month_start_index] == 'S') month = "September";
-    else if (date_time[month_start_index] == 'O') month = "October";
-    else if (date_time[month_start_index] == 'N') month = "November";
-    else if (date_time[month_start_index] == 'D') month = "December";
-
-    return day_of_week + ", " + day + " " + month + " " + year + ".";
+    return day_of_week + ", " + to_string(day) + " " + m + " " + to_string(year) + ".";
 }
 
-void check_menu_option(int n)
+void check_menu_option(int n, bool is_sunday_format, vector<vector<string>> & all_events)
 {
-    if (n == -1)
-    {
-        close_program();
-    }
     switch (n)
     {
-        case 1: show_calendar(); break;
-        case 2: show_events_for_month(); break;
-        case 3: list_events(); break;
-        case 4: add_event(); break;
-        case 5: remove_event(); break;
-        case 6: set_first_weekday(); break;
+        case 1: show_calendar(is_sunday_format, all_events); break;
+        case 2: show_events_for_month(all_events); break;
+        case 3: list_events(all_events); break;
+        case 4: add_event(all_events); break;
+        case 5: remove_event(all_events); break;
+        case 6: set_first_weekday(is_sunday_format); break;
 
-        default: invalid_menu_option(); break;
+        default: break;
     }
-}
-
-void invalid_menu_option()
-{
-    cout << "Your choose was invalid." << endl;
-    cout << "Please enter correct number or -1 to close the program : ";
-    cin >> user_input;
 }
 
 bool compare_events(const vector<string> & event1, const vector<string> & event2)
 {
-    int compare_start_dates = compare_dates(event1[0], event2[0]);
+    string event1_start = event1[0];
+    string event2_start = event2[0];
+
+    int compare_start_dates = compare_dates(event1_start, event2_start);
 
     if (compare_start_dates == 2)
     {
@@ -611,33 +506,9 @@ bool compare_events(const vector<string> & event1, const vector<string> & event2
     return compare_start_dates > 0;
 }
 
-void sort_events()
+void sort_events(vector<vector<string>> & events)
 {
-    sort(events_information.begin(), events_information.end(), compare_events);
-}
-
-void parse_events()
-{
-    string buffer1, start_date, end_date, event_name;
-    fstream file_events_reading;
-    file_events_reading.open(events_file_name, fstream::in);
-
-    if (file_events_reading.is_open())
-    {
-        while(getline(file_events_reading, buffer1)) // read line by line
-        {
-            int current_char_index = 0;
-
-            start_date = parse_date(current_char_index, buffer1);
-            end_date = parse_date(++current_char_index, buffer1);
-            event_name = parse_event_name(++current_char_index, buffer1);
-
-            vector<string> event = {start_date, end_date, event_name};
-            events_information.push_back(event);
-        }
-    }
-
-    file_events_reading.close();
+    sort(events.begin(), events.end(), compare_events);
 }
 
 string parse_date(int & index, string & buffer)
@@ -666,17 +537,23 @@ string parse_event_name(int & index, string & buffer)
 
 string format_event(vector<string> event)
 {
-    string result = event[2] + " ("; // event[2] - event_name
+    //example 1: shopping (28/02/2023)
+    //example 2: trip (10/12/2023 - 24/12/2023)
+    string event_name = event[2];
+    string event_start = event[0];
+    string event_end = event[1];
 
-    int compare = compare_dates(event[0], event[1]); // event[0] - start date; event[1] - end date
+    string result = event_name + " (";
+
+    int compare = compare_dates(event_start, event_end);
 
     if (compare == 2) // if start date = end date
     {
-        result += event[0];
+        result += event_start;
     }
     else
     {
-        result += event[0] + " - " + event[1];
+        result += event_start + " - " + event_end;
     }
 
     result += ")";
@@ -684,11 +561,13 @@ string format_event(vector<string> event)
     return result;
 }
 
-bool contains_event_name(string event_name)
+bool contains_event_name(string & event_name, vector<vector<string>> & events)
 {
-    for (int i = 0; i < events_information.size(); i++)
+    string current_name;
+    for (int i = 0; i < events.size(); i++)
     {
-        if (events_information[i][2] == event_name)
+        current_name = get_event_name(events[i]);
+        if (current_name == event_name)
             return true;
     }
 
@@ -702,13 +581,13 @@ string string_day_of_week(int n, int length = 3)
         return " ";
     }
 
-    return day_of_week[n].substr(0,length);
+    return array_days_of_week[n].substr(0,length);
 }
 
-int int_day_of_week(int day, int month, int year)
+int int_day_of_week(unsigned int day, unsigned int month, unsigned int year)
 {
     int leap_years = (int) year/ 4;
-    long a = (year - leap_years) * 365 + leap_years * 366;
+    unsigned long a = (year - leap_years) * 365 + leap_years * 366;
 
     if(month >= 2) a += 31;
     if(month >= 3 && (int)year/4 == year/4) a += 29;
@@ -727,71 +606,12 @@ int int_day_of_week(int day, int month, int year)
     return (a - 2)  % 7;
 }
 
-string weekday(int day, int month, int year)
+string format_month_and_year(string & input) // input - MM/YYYY
 {
-    int leap_years = (int) year/ 4;
-    long a = (year - leap_years) * 365 + leap_years * 366;
+    unsigned int year = get_year(input, true);
+    unsigned int month = get_month(input, true);
 
-    if(month >= 2) a += 31;
-    if(month >= 3 && (int)year/4 == year/4) a += 29;
-    else if(month >= 3) a += 28;
-    if(month >= 4) a += 31;
-    if(month >= 5) a += 30;
-    if(month >= 6) a += 31;
-    if(month >= 7) a += 30;
-    if(month >= 8) a += 31;
-    if(month >= 9) a += 31;
-    if(month >= 10) a += 30;
-    if(month >= 11) a += 31;
-    if(month == 12) a += 30;
-    a += day;
-
-    int n = (a - 2)  % 7;
-    switch(n)
-    {
-        case 0:
-            return "Sat";
-        case 1:
-            return "Sun";
-        case 2:
-            return "Mon";
-        case 3:
-            return "Tue";
-        case 4:
-            return "Wed";
-        case 5:
-            return "Thu";
-        case 6:
-            return "Fri";
-    }
-
-    return " ";
-}
-
-string get_month_name(string month)
-{
-    if (month == "01") return months.at(0);
-    if (month == "02") return months.at(1);
-    if (month == "03") return months.at(2);
-    if (month == "04") return months.at(3);
-    if (month == "05") return months.at(4);
-    if (month == "06") return months.at(5);
-    if (month == "07") return months.at(6);
-    if (month == "08") return months.at(7);
-    if (month == "09") return months.at(8);
-    if (month == "10") return months.at(9);
-    if (month == "11") return months.at(10);
-    if (month == "12") return months.at(11);
-
-    return "Error! Invalid month";
-}
-
-string format_month_and_year(string input) // input - MM/YYYY
-{
-    string year =  input.substr(3, input.size());
-    string month = get_month_name(input.substr(0, 2));
-
-    return month + " " + year;
+    return months[month - 1] + " " + to_string(year);
 }
 
 long pow(int base, int power)
@@ -807,12 +627,12 @@ long pow(int base, int power)
     return result;
 }
 
-int parse_string_to_integer(string s)
+unsigned int parse_string_to_integer(string s)
 {
     unsigned int result = 0u;
-    int power = s.size() - 1;
+    unsigned int power = s.size() - 1;
 
-    int size = s.size();
+    unsigned int size = s.size();
     int current_n;
 
     for (int i = 0; i < size; i++)
@@ -824,7 +644,7 @@ int parse_string_to_integer(string s)
     return result;
 }
 
-bool is_leap_year(int year)
+bool is_leap_year(unsigned int year)
 {
     bool is_leap_year = false;
 
@@ -834,7 +654,7 @@ bool is_leap_year(int year)
     return is_leap_year;
 }
 
-int days_of_month(int month, int year)
+unsigned int days_of_month(unsigned int month, unsigned int year)
 {
     bool leap_year = is_leap_year(year); //false = 0; true = 1;
 
@@ -854,11 +674,11 @@ int days_of_month(int month, int year)
 
 //day1 and month1 - start date
 //day2 and month2 - end date
-int days_between_dates_in_same_year(int day1, int month1, int day2, int month2, int year)
+unsigned int days_between_dates_in_same_year(unsigned int day1, unsigned int month1, unsigned int day2, unsigned int month2, unsigned int year)
 {
-    int diff_days_in_current_month = days_of_month(month1, year) - day1;
-    int diff_months = month2 - month1;
-    int sum_days = 0;
+    unsigned int diff_days_in_current_month = days_of_month(month1, year) - day1;
+    unsigned int diff_months = month2 - month1;
+    unsigned int sum_days = 0;
 
     if (diff_months > 1)
     {
@@ -871,15 +691,15 @@ int days_between_dates_in_same_year(int day1, int month1, int day2, int month2, 
     return day2 + diff_days_in_current_month + sum_days + 1;
 }
 
-int difference_between(string start_date, string end_date)
+unsigned int difference_between(string & start_date, string & end_date)
 {
-    int day1 = get_day(start_date);
-    int month1 = get_month(start_date);
-    int year1 = get_year(start_date);
+    unsigned int day1 = get_day(start_date);
+    unsigned int month1 = get_month(start_date);
+    unsigned int year1 = get_year(start_date);
 
-    int day2 = get_day(end_date);
-    int month2 = get_month(end_date);
-    int year2 = get_year(end_date);
+    unsigned int day2 = get_day(end_date);
+    unsigned int month2 = get_month(end_date);
+    unsigned int year2 = get_year(end_date);
 
     if (month1 == month2 && year1 == year2)
     {
@@ -892,12 +712,12 @@ int difference_between(string start_date, string end_date)
     }
 
     // when year1 != year2
-    int diff_years = year2 - year1;
+    unsigned int diff_years = year2 - year1;
 
-    int days_till_end_year1 = days_between_dates_in_same_year(day1, month1, 31, 12, year1);
-    int days_from_begin_year2 = days_between_dates_in_same_year(1, 1, day2, month2, year2);
+    unsigned int days_till_end_year1 = days_between_dates_in_same_year(day1, month1, 31, 12, year1);
+    unsigned int days_from_begin_year2 = days_between_dates_in_same_year(1, 1, day2, month2, year2);
 
-    int sum_days = 0;
+    unsigned int sum_days = 0;
 
     if (diff_years > 1)
     {
@@ -910,14 +730,15 @@ int difference_between(string start_date, string end_date)
     return days_till_end_year1 + sum_days + days_from_begin_year2;
 }
 
-int get_day(string date)
+unsigned int get_day(string & date)
 {
-    return parse_string_to_integer(date.substr(0, 2));
+    string substring = date.substr(0, 2);
+    return parse_string_to_integer(substring);
 }
 
 // full_format = "dd/mm/yyyy";
 // short_format = "mm/yyyy";
-int get_month(string date, bool is_short_format)
+unsigned int get_month(string & date, bool is_short_format)
 {
     if (is_short_format)
     {
@@ -927,7 +748,7 @@ int get_month(string date, bool is_short_format)
     return parse_string_to_integer(date.substr(3, 2));
 }
 
-int get_year(string date, bool is_short_format)
+unsigned int get_year(string & date, bool is_short_format)
 {
     if (is_short_format)
     {
@@ -937,37 +758,219 @@ int get_year(string date, bool is_short_format)
     return parse_string_to_integer(date.substr(6, 4));
 }
 
-int * get_event_for_month(int month, int year)
+unsigned int get_today()
 {
-    int month_total_days = days_of_month(month, year);
-    int * events_count_array = new int[month_total_days + 1]{};
+    time_t now = time(0);
+    char * date_time = ctime(& now);
 
-    int days_difference = 0;
-    int current_day = 0;
-    int current_month = 0;
-    int current_year = 0;
+    string str_today = {date_time[day_of_month_start_index], date_time[day_of_month_start_index + 1]};
 
-    for (int i = 0; i < events_information.size(); i++)
+    return parse_string_to_integer(str_today);
+}
+
+unsigned int get_current_month()
+{
+    time_t now = time(0);
+    char * date_time = ctime(& now);
+
+    return get_month_by_name(date_time);
+}
+
+unsigned int get_current_year()
+{
+    time_t now = time(0);
+    char * date_time = ctime(& now);
+
+    string str_this_year = {date_time[year_start_index], date_time[year_start_index + 1],
+                            date_time[year_start_index + 2], date_time[year_start_index + 3]};
+
+    return parse_string_to_integer(str_this_year);
+}
+
+unsigned int get_tomorrow()
+{
+    unsigned int today = get_today();
+    unsigned int days_in_month = days_of_month(get_current_month(), get_current_year());
+
+    if (today + 1 <= days_in_month)
     {
-        current_day = get_day(events_information[i][0]);
-        current_month = get_month(events_information[i][0]);
-        current_year = get_year(events_information[i][0]);
+        return today + 1;
+    }
+    else
+    {
+        return 1;
+    }
+}
 
-        bool match = (month == current_month) && (year == current_year);
-
-        if (!match)
-            continue;
-
-        int diff = get_day(events_information[i][1]) - current_day;
-        for (int k = 1; k <= diff; k++)
-        {
-            events_count_array[current_day + k]++;
-        }
-
-        events_count_array[current_day]++;
+unsigned int get_tomorrow_month()
+{
+    if (get_tomorrow() != 1)
+    {
+        return get_current_month();
     }
 
-    return events_count_array;
+    unsigned int month = get_current_month();
+    if (month + 1 <= months.size())
+    {
+        return month + 1;
+    }
+    else
+    {
+        return 1;
+    }
+
+}
+
+unsigned int get_tomorrow_year()
+{
+    if (get_tomorrow() == 1 && get_tomorrow_month() == 1)
+    {
+        return get_current_year() + 1;
+    }
+
+    return get_current_year();
+}
+
+string get_event_start_date(vector<string> event)
+{
+    return event[0];
+}
+
+string get_event_end_date(vector<string> event)
+{
+    return event[1];
+}
+
+string get_event_name(vector<string> event)
+{
+    return event[2];
+}
+
+vector<vector<string>> parse_events()
+{
+    vector<vector<string>> events;
+
+    string buffer1, start_date, end_date, event_name;
+    fstream file_events_reading;
+    file_events_reading.open(events_file_name, fstream::in);
+
+    if (file_events_reading.is_open())
+    {
+        while(getline(file_events_reading, buffer1)) // read line by line
+        {
+            int current_char_index = 0;
+
+            start_date = parse_date(current_char_index, buffer1);
+            end_date = parse_date(++current_char_index, buffer1);
+            event_name = parse_event_name(++current_char_index, buffer1);
+
+            vector<string> event = {start_date, end_date, event_name};
+            events.push_back(event);
+        }
+    }
+
+    file_events_reading.close();
+
+    return events;
+}
+
+bool parse_first_day_of_week()
+{
+    string text;
+    fstream file_read;
+    file_read.open(settings_file_name, fstream::in);
+    if (file_read.is_open())
+    {
+        getline(file_read, text);
+    }
+    file_read.close();
+
+    int n = parse_string_to_integer(text);
+
+    return n > 0;
+}
+
+vector<vector<string>> events_for_month(unsigned int month,unsigned int year, vector<vector<string>> & all_events)
+{
+    vector<vector<string>> events;
+    unsigned int current_month;
+    unsigned int current_year;
+    string current_start_date;
+
+    for (int i = 0; i < all_events.size(); i++)
+    {
+        current_start_date = get_event_start_date(all_events[i]);
+        current_month = get_month(current_start_date, false);
+        current_year = get_year(current_start_date, false);
+
+        if (month == current_month && year == current_year)
+        {
+            vector<string> current_event = all_events[i];
+
+            events.push_back(current_event);
+        }
+    }
+
+    return events;
+}
+
+vector<vector<string>> events_for_day(unsigned int day, unsigned int month, unsigned int year, vector<vector<string>> & all_events)
+{
+    vector<vector<string>> events;
+    unsigned int current_day;
+    unsigned int current_month;
+    unsigned int current_year;
+    string current_start_date;
+
+    for (int i = 0; i < all_events.size(); i++)
+    {
+        current_start_date = get_event_start_date(all_events[i]);
+
+        current_day = get_day(current_start_date);
+        current_month = get_month(current_start_date, false);
+        current_year = get_year(current_start_date, false);
+
+        if (day == current_day && month == current_month && year == current_year)
+        {
+            vector<string> current_event = all_events[i];
+
+            events.push_back(current_event);
+        }
+    }
+
+    return events;
+}
+
+void print_events(vector<vector<string>> & events)
+{
+    for (int i = 0; i < events.size(); i++)
+    {
+        cout << i + 1 << ". " << get_event_name(events[i]) << endl;
+    }
+}
+
+void start(vector<vector<string>> & all_events, vector<vector<string>> & current_month_events, vector<vector<string>> & events_today)
+{
+    unsigned int today = get_today();
+    unsigned int current_month = get_current_month();
+    unsigned int current_year = get_current_year();
+
+    if (events_today.empty())
+    {
+        unsigned int tomorrow = get_tomorrow();
+        unsigned int tomorrow_month = get_tomorrow_month();
+        unsigned int tomorrow_year = get_tomorrow_year();
+
+        vector<vector<string>> events_tomorrow = events_for_day(tomorrow, tomorrow_month, tomorrow_year, all_events);
+        int count_events_tomorrow = events_tomorrow.size();
+
+        cout << tomorrow_events_message << count_events_tomorrow << endl;
+    }
+    else
+    {
+        cout << events_message << endl;
+        print_events(events_today);
+    }
 }
 
 int get_month_by_name(char * date_time)
@@ -986,4 +989,163 @@ int get_month_by_name(char * date_time)
     else if (date_time[month_start_index] == 'D') return 12;
 
     return -1;
+}
+
+void print_day_of_week(bool is_sunday_format, int today_day_of_week, bool is_current_month_calendar, string & space)
+{
+    if (is_sunday_format)
+    {
+        for (int i = 0; i < days_of_week; i++)
+        {
+            if (is_current_month_calendar && i == today_day_of_week)
+            {
+                int count = space.size() - 1;
+                string current_spaces = string(count, ' ');
+
+                cout << current_spaces << "[" << string_day_of_week(i, 2) << "]" << current_spaces;
+            }
+            else
+            {
+                cout << space << string_day_of_week(i, 2) << space;
+            }
+        }
+    }
+    else
+    {
+        for (int i = 1; i <= days_of_week; i++)
+        {
+            if (is_current_month_calendar && (i % 7) == today_day_of_week)
+            {
+                int count = space.size() - 1;
+                string current_spaces = string(count, ' ');
+
+                cout << current_spaces << "[" << string_day_of_week((i % 7), 2) << "]" << current_spaces;
+            }
+            else
+            {
+                cout << space << string_day_of_week((i % 7), 2) << space;
+            }
+        }
+    }
+}
+
+void print_empty_days(string & empty_days, int first_day_of_week, bool is_sunday_format)
+{
+    if (is_sunday_format)
+    {
+        for (int i = 0; i < first_day_of_week; i++)
+        {
+            cout << empty_days;
+        }
+
+        return;
+    }
+
+    if (first_day_of_week == 0) first_day_of_week = 7;
+
+    for (int i = 1; i < first_day_of_week; i++)
+    {
+        cout << empty_days;
+    }
+}
+
+void print_days(bool is_sunday_format, int first_day_of_week, int today, bool is_current_month_calendar, string & spaces, int days, int * & events_array)
+{
+    if (!is_sunday_format)
+    {
+        if (first_day_of_week == 0)
+            first_day_of_week = 7;
+
+        --first_day_of_week;
+    }
+
+    for (int i = 1; i <= days; i++)
+    {
+        if ((i + first_day_of_week) % 7 == 1)
+        {
+            cout << endl;
+        }
+
+        int count_events = events_array[i];
+
+        if (i == today && is_current_month_calendar)
+        {
+            int count = spaces.size() - 1;
+            string current_spaces = string(count, ' ');
+            cout << current_spaces << "[" << today << "]";
+        }
+        else
+        {
+            cout << spaces << ((i < 10) ? " " : "") << i;
+        }
+
+        if (count_events > 0)
+        {
+            cout << "(" << count_events << ")";
+
+            // when current day has events - symbols are more than we want
+            if (i == today && is_current_month_calendar) continue;
+
+            cout << ((count_events < 10) ? " " : "");
+        }
+        else if (!is_current_month_calendar || i != today)
+        {
+            cout << spaces;
+        }
+    }
+}
+
+void print_calendar(bool is_sunday_format, string input, int * events_array, int days, int first_day_of_week, int today, int today_day_of_week, bool is_current_month_calendar)
+{
+    // print name of month and year
+    string spaces = string(4, ' ');
+    unsigned int count = (spaces.size() * 2 + 2) * days_of_week;
+
+    cout << format_month_and_year(input) << endl;
+    cout << string(count, '-') << endl;
+
+    cout << "first day ot week : " << first_day_of_week << " - " << array_days_of_week[first_day_of_week] << endl;
+
+    // Mo Tu We Th Fr Sa Su
+    print_day_of_week(is_sunday_format, today_day_of_week, is_current_month_calendar, spaces);
+    cout << endl;
+
+    string empty_day = spaces + "**" + spaces;
+    print_empty_days(empty_day, first_day_of_week, is_sunday_format);
+
+    print_days(is_sunday_format, first_day_of_week, today, is_current_month_calendar, spaces, days, events_array);
+}
+
+int * convert_events_of_month_into_array(unsigned int month, unsigned int year, vector<vector<string>> month_events)
+{
+    unsigned int days = days_of_month(month, year) + 1;
+    int * array = new int[days]{};
+
+    unsigned int current_start_date = 0u;
+    unsigned int current_end_date = 0u;
+
+    int size = month_events.size();
+    for (int i = 0; i < size; i++)
+    {
+        string start_date = get_event_start_date(month_events[i]);
+        string end_date = get_event_end_date(month_events[i]);
+
+        current_start_date = get_day(start_date);
+        current_end_date = get_day(end_date);
+
+        unsigned int diff = current_end_date - current_start_date;
+        if (diff > 0)
+        {
+            for (int k = 0; k <= diff; k++)
+            {
+                array[k + current_start_date]++;
+            }
+        }
+        else
+        {
+            array[current_start_date]++;
+        }
+    }
+
+    return array;
 }
