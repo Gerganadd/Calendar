@@ -58,6 +58,7 @@ string format_month_and_year(string & input);
 string format_event(vector<string> event);
 
 int compare_dates(string & date1, string & date2);
+bool is_valid_date(string & date);
 bool validate_dates(string & start, string & end);
 
 bool compare_events(const vector<string> & event1, const vector<string> & event2);
@@ -446,6 +447,11 @@ int compare_dates(string & date1, string & date2)
     return 2;
 }
 
+bool is_valid_date(string & date)
+{
+    // to-do;
+}
+
 // check if end date is before start date
 bool validate_dates(string & start, string & end)
 {
@@ -586,24 +592,16 @@ string string_day_of_week(int n, int length = 3)
 
 int int_day_of_week(unsigned int day, unsigned int month, unsigned int year)
 {
-    int leap_years = (int) year/ 4;
-    unsigned long a = (year - leap_years) * 365 + leap_years * 366;
+    month = (month + 9) % 12;
+    year -= month / 10;
 
-    if(month >= 2) a += 31;
-    if(month >= 3 && (int)year/4 == year/4) a += 29;
-    else if(month >= 3) a += 28;
-    if(month >= 4) a += 31;
-    if(month >= 5) a += 30;
-    if(month >= 6) a += 31;
-    if(month >= 7) a += 30;
-    if(month >= 8) a += 31;
-    if(month >= 9) a += 31;
-    if(month >= 10) a += 30;
-    if(month >= 11) a += 31;
-    if(month == 12) a += 30;
-    a += day;
+    unsigned int result = (365*year) + (year/4) - (year/100) + (year/400) + ((month*306 + 5)/10) + (day - 1);
+    result %= 7;
 
-    return (a - 2)  % 7;
+    if (result >= 0 && result <= 3) result += 3;
+    else result -= 4;
+
+    return result;
 }
 
 string format_month_and_year(string & input) // input - MM/YYYY
@@ -1103,8 +1101,6 @@ void print_calendar(bool is_sunday_format, string input, int * events_array, int
 
     cout << format_month_and_year(input) << endl;
     cout << string(count, '-') << endl;
-
-    cout << "first day ot week : " << first_day_of_week << " - " << array_days_of_week[first_day_of_week] << endl;
 
     // Mo Tu We Th Fr Sa Su
     print_day_of_week(is_sunday_format, today_day_of_week, is_current_month_calendar, spaces);
