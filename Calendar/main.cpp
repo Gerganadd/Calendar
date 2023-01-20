@@ -21,6 +21,7 @@ const string events_message = "You have the followings events: ";
 const string event_name_message = "Enter name : ";
 const string add_event_start_date_message = "Enter start date (DD/MM/YYYY) : ";
 const string add_event_end_date_message = "Enter end date (DD/MM/YYYY) : ";
+const string problem_invalid_date = "Indalid date";
 const string problem_end_date_message = "Error! end date must be after start date";
 const string problem_event_name_message = "Error! There is already an event with that name!";
 const string problem_open_file = "Failed to open file";
@@ -39,6 +40,7 @@ const int days_of_week = 7;
 const int month_start_index = 4;
 const int day_of_month_start_index = 8;
 const int year_start_index = 20;
+const char separator = '/';
 
 //help functions
 void start(vector<vector<string>> & all_events, vector<vector<string>> & current_month_events, vector<vector<string>> & events_today);
@@ -58,8 +60,8 @@ string format_month_and_year(string & input);
 string format_event(vector<string> event);
 
 int compare_dates(string & date1, string & date2);
-bool is_valid_date(string & date);
-bool validate_dates(string & start, string & end);
+void validate_date(string & date, bool is_short_format = false);
+bool validate_start_and_end_date(string & start, string & end);
 
 bool compare_events(const vector<string> & event1, const vector<string> & event2);
 bool contains_event_name(string & event_name, vector<vector<string>> & events);
@@ -68,6 +70,7 @@ vector<vector<string>> events_for_day(unsigned int day, unsigned int month, unsi
 int * convert_events_of_month_into_array(unsigned int month, unsigned int year, vector<vector<string>> month_events);
 void print_events(vector<vector<string>> & events);
 
+int get_index_of_char(string & text, char symbol, int count_matches);
 bool is_leap_year(unsigned int year);
 long pow(int base, int power);
 
@@ -152,6 +155,8 @@ void show_calendar(bool is_sunday_format, vector<vector<string>> all_events)
     string input;
     getline(cin, input);
 
+    validate_date(input, true);
+
     unsigned int month = get_month(input, true);
     unsigned int year = get_year(input, true);
     unsigned int days = days_of_month(month, year);
@@ -173,6 +178,8 @@ void show_events_for_month(vector<vector<string>> & all_events)
     cout << enter_short_date_short_format << endl;
     string input;
     getline(cin, input);
+
+    validate_date(input, true);
 
     unsigned int current_month = get_month(input, true);
     unsigned int current_year = get_year(input, true);
@@ -278,12 +285,16 @@ void add_event(vector<vector<string>> & all_events)
 
     cout << event_name_message << endl;
     getline(cin, event_name, '\n');
+
     cout << add_event_start_date_message << endl;
     getline(cin, start_date);
+    validate_date(start_date, false);
+
     cout << add_event_end_date_message << endl;
     getline(cin, end_date);
+    validate_date(start_date, false);
 
-    bool is_valid = validate_dates(start_date, end_date);
+    bool is_valid = validate_start_and_end_date(start_date, end_date);
     bool is_contains_name = contains_event_name(event_name, all_events);
 
     if (is_valid && !is_contains_name)
@@ -447,13 +458,54 @@ int compare_dates(string & date1, string & date2)
     return 2;
 }
 
-bool is_valid_date(string & date)
+int get_index_of_char(string & text, char symbol, int count_matches)
 {
-    // to-do;
+    int text_size = text.size();
+    int counter = 0;
+    for (int i = 0; i < text_size; i++)
+    {
+        if (text[i] == symbol)
+        {
+            counter++;
+        }
+        if (counter == count_matches)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+void validate_date(string & date, bool is_short_format)
+{
+    if (date.size() > full_format.size())
+    {
+        cout << problem_invalid_date << endl;
+        close_program();
+    }
+
+    unsigned int day = get_day(date);
+    unsigned int month = get_month(date, is_short_format);
+    unsigned int year = get_year(date, is_short_format);
+
+    if (month > months.size() || month < 0)
+    {
+        cout << problem_invalid_date << endl;
+        close_program();
+    }
+
+    int total_days_in_month = days_of_month(month, year);
+
+    if (day > total_days_in_month || day < 1)
+    {
+        cout << problem_invalid_date << endl;
+        close_program();
+    }
 }
 
 // check if end date is before start date
-bool validate_dates(string & start, string & end)
+bool validate_start_and_end_date(string & start, string & end)
 {
     int compare = compare_dates(start, end);
 
@@ -730,7 +782,8 @@ unsigned int difference_between(string & start_date, string & end_date)
 
 unsigned int get_day(string & date)
 {
-    string substring = date.substr(0, 2);
+    int index_of_first_separator = get_index_of_char(date, separator, 1);
+    string substring = date.substr(0, index_of_first_separator);
     return parse_string_to_integer(substring);
 }
 
@@ -738,22 +791,28 @@ unsigned int get_day(string & date)
 // short_format = "mm/yyyy";
 unsigned int get_month(string & date, bool is_short_format)
 {
+    int index_of_first_digit;
     if (is_short_format)
     {
-        return parse_string_to_integer(date.substr(0, 2));
+        index_of_first_digit = 0;
+    }
+    else
+    {
+        index_of_first_digit = get_index_of_char(date, separator, 1) + 1;
     }
 
-    return parse_string_to_integer(date.substr(3, 2));
+    int index_of_second_separator = get_index_of_char(date, separator, 2 - is_short_format);
+
+    int diff = index_of_second_separator - index_of_first_digit;
+
+    return parse_string_to_integer(date.substr(index_of_first_digit, diff));
 }
 
 unsigned int get_year(string & date, bool is_short_format)
 {
-    if (is_short_format)
-    {
-        return parse_string_to_integer(date.substr(3, 4));
-    }
-
-    return parse_string_to_integer(date.substr(6, 4));
+    int index_of_first_digit = get_index_of_char(date, separator, 2 - is_short_format) + 1;
+    int diff = date.size() - index_of_first_digit;
+    return parse_string_to_integer(date.substr(index_of_first_digit, diff));
 }
 
 unsigned int get_today()
