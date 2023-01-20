@@ -1124,31 +1124,36 @@ void print_days(bool is_sunday_format, int first_day_of_week, int today, bool is
         }
 
         int count_events = events_array[i];
+        int symbols = 0;
 
+        // for day
         if (i == today && is_current_month_calendar)
         {
             int count = spaces.size() - 1;
             string current_spaces = string(count, ' ');
             cout << current_spaces << "[" << today << "]";
+            symbols++;
         }
         else
         {
             cout << spaces << ((i < 10) ? " " : "") << i;
         }
 
+        // for events of day
         if (count_events > 0)
         {
             cout << "(" << count_events << ")";
+            symbols += 2;
 
-            // when current day has events - symbols are more than we want
-            if (i == today && is_current_month_calendar) continue;
+            int count_events_size = to_string(count_events).size();
+            symbols += count_events_size;
 
-            cout << ((count_events < 10) ? " " : "");
         }
-        else if (!is_current_month_calendar || i != today)
-        {
-            cout << spaces;
-        }
+
+        int count = symbols - spaces.size();
+        if (count < 0) count *= -1;
+
+        cout << string(count, ' ');
     }
 }
 
